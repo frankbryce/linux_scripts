@@ -14,7 +14,7 @@ if [ ! -d ~/linux_scripts ]; then
   git clone "https://github.com/frankbryce/linux_scripts.git"
 fi
 
-cp -R "$@" ~/linux_scripts/
+for g in "$@"; do echo "rsync -P --include=\"$g\" ~/ ~/linux_scripts"; rsync -P --include="$g" ~/ ~/linux_scripts; done
 git -C ~/linux_scripts/ add .
 # user is prompted for commit message, then if there are changes it's pushed
 git -C ~/linux_scripts/ commit && git -C ~/linux_scripts push
