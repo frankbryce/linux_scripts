@@ -16,7 +16,7 @@ git clone https://github.com/frankbryce/linux_scripts.git
 mypull
 ```
 
-# To Push a File Back to the Repo
+## To Push a File Back to the Repo
 
 ```bash
 # this is added to your PATH automatically on startup
@@ -24,7 +24,7 @@ cd ~
 mypush <rel_path_to_file>
 ```
 
-# To Delete a File in the Repo
+## To Delete a File in the Repo
 
 TODO: add this to the push functionality
 
