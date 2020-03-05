@@ -21,5 +21,5 @@ if [ ! -d ~/linux_scripts ]; then
 fi
 
 git -C ~/linux_scripts pull
-rsync -aP --exclude=.git ~/linux_scripts/. ~/
+rsync -aP --exclude=.git --exclude=README.md ~/linux_scripts/. ~/
 
