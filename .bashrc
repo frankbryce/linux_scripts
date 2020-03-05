@@ -103,12 +103,14 @@ if ! shopt -oq posix; then
   fi
 fi
 
+TMUX_CMD=tmux
+if [[ $(hostname -s) = *.corp.google.com ]]; then
+  TMUX_CMD=tmx2
+fi
+
 # automatically enter tmux session so I don't have to think about it
-# ssh jcarp.hot.corp.google.com -t tmx2 a -d -t 0
-# this was when I kept state on my local computer... keeping it in ubiquity
-# is nice because my local computer shuts down every week (by design on my part)
 if ! { [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; } then
-  tmx2 a -t 0 || tmx2
+  $TMUX_CMD a -t 0 || $TMUX_CMD
 fi
 
 # my personal bash commands from various internet sources
