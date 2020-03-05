@@ -1,0 +1,25 @@
+#!/bin/bash
+
+USAGE () {
+  printf "USAGE:\n$0"
+}
+
+if [[ $1 = help ]]; then
+  USAGE
+  exit 0
+fi
+
+if [[ ! -z $1 ]]; then
+  USAGE 1>&2
+  echo "no arguments should be passed.  This pulls from frankbryce's
+  linux_scripts repo and copies/overwrites files in the home directory" 1>&2
+  exit 128
+fi
+
+if [ ! -d ~/linux_scripts ]; then
+  git clone "https://github.com/frankbryce/linux_scripts.git"
+fi
+
+git -C ~/linux_scripts pull
+rsync -aP --exclude=.git ~/linux_scripts/. ~/
+
