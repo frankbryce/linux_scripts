@@ -9,17 +9,25 @@
 #umask 022
 
 # if running bash
-echo "check bash"
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
-    echo "checking bashrc"
     if [ -f "$HOME/.bashrc" ]; then
-        echo "running bashrc"
 	. "$HOME/.bashrc"
     fi
 fi
 
-# set PATH so it includes user's private bin directories
-PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+# values for google source code locations
+export head=/google/src/head/depot/google3
+export citc_root=/google/src/cloud/jcarp/
+export ebin=experimental/users/jcarp/bin
+export gbin=$head/$ebin
 
-sudo hostname frankbryce
+# personal env vars
+# export PAYMENTS_CELLS="im it jx yi yv"
+export PAYMENTS_CELLS="im jx yi yv"
+export MY_CELLS=$PAYMENTS_CELLS
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    PATH="$PATH:$HOME/bin:$gbin"
+fi
