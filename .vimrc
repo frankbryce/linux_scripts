@@ -1,3 +1,15 @@
+" Plugins will be downloaded under the specified directory.
+call plug#begin('~/.vim/plugged')
+
+" Declare the list of plugins.
+
+" List ends here. Plugins become visible to Vim after this call.
+call plug#end()
+
+" This was what I originally had before I installed Plug.  It may be the case
+" that I'll install plugins to replace all of this stuff but for now I'll just
+" keep it until I realize it's messing with a plugin or something.
+
 " Don't try to be vi compatible
 set nocompatible
 
