@@ -6,7 +6,7 @@ This script installs a few things on the workstation
 
 * A `.bashrc` file (starts tmux, sets PS1, sets PATH, and does a few other things)
 * A `.tmux.conf` file
-* A `.vimrc` file
+* A `.vimrc` file and a `.vim` directory for plugins, etc.
 * A `~/bin/` directory which contains standard scripts I want on all my
   workstations.
 
