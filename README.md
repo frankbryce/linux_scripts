@@ -9,6 +9,8 @@ This script installs a few things on the workstation
 * A `.vimrc` file and a `.vim` directory for plugins, etc.
 * A `~/bin/` directory which contains standard scripts I want on all my
   workstations.
+* A `~/.bash_aliases` file which gets loaded by ~/.bashrc with helpful pre-set
+  commands.
 
 The effect of this is that all linux workstations that I will spend any amount
 of time on (> 1 hour) can now have my shell environment installed on it that
