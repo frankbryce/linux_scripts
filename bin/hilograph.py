@@ -12,7 +12,7 @@ def hilograph(n):
         for gi in g:
             data[i,gi] = [254,0,0]
     img = Image.fromarray(data)
-    img.save("holograph{}.bmp".format(n))
+    img.save("hilograph{}.bmp".format(n))
 
 if __name__ == "__main__":
   hilograph(int(sys.argv[1]))
