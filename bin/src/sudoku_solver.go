@@ -1,71 +1,72 @@
 package main
 
 import (
-	"container/heap"
-	"fmt"
-  "time"
+    "container/heap"
+    "fmt"
+    "time"
 )
 
 var (
-    speed = 1 * time.Millisecond
+    speed = 100 * time.Millisecond
 )
 
 func strToByte(s [][]string) [][]byte {
-	ret := make([][]byte, len(s))
-	for r := range s {
-		ret[r] = make([]byte, len(s[r]))
-		for c,v := range s[r] {
-			if v == "1" {
-				ret[r][c] = byte('1')
-			} else if v == "2" {
-				ret[r][c] = byte('2')
-			} else if v == "3" {
-				ret[r][c] = byte('3')
-			} else if v == "4" {
-				ret[r][c] = byte('4')
-			} else if v == "5" {
-				ret[r][c] = byte('5')
-			} else if v == "6" {
-				ret[r][c] = byte('6')
-			} else if v == "7" {
-				ret[r][c] = byte('7')
-			} else if v == "8" {
-				ret[r][c] = byte('8')
-			} else if v == "9" {
-				ret[r][c] = byte('9')
-			} else if v == "." {
-				ret[r][c] = byte('.')
-			} else {
-				panic("at the disco")
-			}
-		}
-	}
-	return ret
+    ret := make([][]byte, len(s))
+    for r := range s {
+        ret[r] = make([]byte, len(s[r]))
+        for c,v := range s[r] {
+            if v == "1" {
+                ret[r][c] = byte('1')
+            } else if v == "2" {
+                ret[r][c] = byte('2')
+            } else if v == "3" {
+                ret[r][c] = byte('3')
+            } else if v == "4" {
+                ret[r][c] = byte('4')
+            } else if v == "5" {
+                ret[r][c] = byte('5')
+            } else if v == "6" {
+                ret[r][c] = byte('6')
+            } else if v == "7" {
+                ret[r][c] = byte('7')
+            } else if v == "8" {
+                ret[r][c] = byte('8')
+            } else if v == "9" {
+                ret[r][c] = byte('9')
+            } else if v == "." {
+                ret[r][c] = byte('.')
+            } else {
+                panic("at the disco")
+            }
+        }
+    }
+    return ret
 }
 
 func print(board [][]byte) {
-	for r := 0; r < 9; r++ {
-		if r%3 == 0 {
-			fmt.Println("+---+---+---+                         ")
-		}
-		row := ""
-		for c := 0; c < 9; c++ {
-			if c%3 == 0 {
-				row += "|"
-			}
-			row += string(rune(board[r][c]))
-		}
-		row += "|                                 "
-		fmt.Println(row)
-	}
-	fmt.Println("+---+---+---+                             ")
+    fmt.Printf("\033[0;0H")
+    for r := 0; r < 9; r++ {
+        if r%3 == 0 {
+            fmt.Println("+---+---+---+                             ")
+        }
+        row := ""
+        for c := 0; c < 9; c++ {
+            if c%3 == 0 {
+                row += "|"
+            }
+            row += string(rune(board[r][c]))
+        }
+        row += "|                             "
+        fmt.Println(row)
+    }
+    fmt.Println("+---+---+---+                             ")
+    time.Sleep(speed)
 }
 
 func main() {
-	board := strToByte([][]string{{"8",".",".",".",".",".",".",".","."},{".",".","3","6",".",".",".",".","."},{".","7",".",".","9",".","2",".","."},{".","5",".",".",".","7",".",".","."},{".",".",".",".","4","5","7",".","."},{".",".",".","1",".",".",".","3","."},{".",".","1",".",".",".",".","6","8"},{".",".","8","5",".",".",".","1","."},{".","9",".",".",".",".","4",".","."}})
-	fmt.Printf("\033[0;0H")
-	print(board)
-  solveSudoku(board)
+    board := strToByte([][]string{{"8",".",".",".",".",".",".",".","."},{".",".","3","6",".",".",".",".","."},{".","7",".",".","9",".","2",".","."},{".","5",".",".",".","7",".",".","."},{".",".",".",".","4","5","7",".","."},{".",".",".","1",".",".",".","3","."},{".",".","1",".",".",".",".","6","8"},{".",".","8","5",".",".",".","1","."},{".","9",".",".",".",".","4",".","."}})
+    print(board)
+    solveSudoku(board)
 }
 
 func solveSudoku(board [][]byte)  {
@@ -73,8 +74,8 @@ func solveSudoku(board [][]byte)  {
 }
 
 type Cell struct {
-	r, c int        // row and column of the cell
-	p map[byte]bool // possibilities for the cell
+    r, c int        // row and column of the cell
+    p map[byte]bool // possibilities for the cell
 }
 
 // A SudokuHeap implements heap.Interface and holds Cells.
@@ -87,21 +88,21 @@ func (h SudokuHeap) Less(i, j int) bool {
 }
 
 func (h SudokuHeap) Swap(i, j int) {
-	h[i], h[j] = h[j], h[i]
+    h[i], h[j] = h[j], h[i]
 }
 
 func (h *SudokuHeap) Push(x interface{}) {
-	item := x.(*Cell)
-	*h = append(*h, item)
+    item := x.(*Cell)
+    *h = append(*h, item)
 }
 
 func (h *SudokuHeap) Pop() interface{} {
-	old := *h
-	n := len(old)
-	item := old[n-1]
-	old[n-1] = nil
-	*h = old[0 : n-1]
-	return item
+    old := *h
+    n := len(old)
+    item := old[n-1]
+    old[n-1] = nil
+    *h = old[0 : n-1]
+    return item
 }
 
 func P(board [][]byte, r, c int) map[byte]bool {
@@ -156,8 +157,6 @@ func solveSudokuRecurse(board [][]byte) bool {
         // 2. When object is popped, update possibilities from board.
         cell.p = P(board, cell.r, cell.c)
         if len(cell.p) == 0 {
-						// fmt.Println("ran out of options for cell", cell.r, cell.c)
-				    // time.Sleep(speed)
             return false
         }
         // 3. if only one possibility, update board and proceed to step 1.
@@ -165,23 +164,16 @@ func solveSudokuRecurse(board [][]byte) bool {
             for n := range cell.p {
                 board[cell.r][cell.c] = n
             }
-						fmt.Printf("\033[0;0H")
-				    print(board)
-				    time.Sleep(speed)
+            print(board)
             continue
         }
         // 4. pick a possibility, populate board with value for next hypothetical world
         for p := range cell.p {
-            //fmt.Println()
-						//fmt.Println("going through possibilities for cell", cell.r, cell.c, cell.p)
-				    //time.Sleep(speed)
             if board[cell.r][cell.c] != '.' {
                 panic("cell was popped for a board position that's already filled in.")
             }
             board[cell.r][cell.c] = p
-						fmt.Printf("\033[0;0H")
-				    print(board)
-				    time.Sleep(speed)
+            print(board)
             // 5. call FUNC with copy of board.
             boardDup := make([][]byte, len(board))
             for i := range board {
@@ -190,16 +182,16 @@ func solveSudokuRecurse(board [][]byte) bool {
             }
             // 6. if FUNC returns with true, return true
             if solveSudokuRecurse(boardDup) {
-							  for i := range boardDup {
-										board[i] = make([]byte, len(boardDup[i]))
-										copy(board[i], boardDup[i])
-								}
+                for i := range boardDup {
+                    board[i] = make([]byte, len(boardDup[i]))
+                    copy(board[i], boardDup[i])
+                 }
                 return true
             }
-            // 7. if FUNC returns with false, remove possibility from the cell, push cell back on heap and return to 1.
-						board[cell.r][cell.c] = '.'
+            // 7. if FUNC returns with false, reset board and return to 1.
+            board[cell.r][cell.c] = '.'
         }
-				return false
+        return false
     }
     return true
 }
