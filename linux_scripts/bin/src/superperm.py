@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import itertools
 import functools
+import sys
 
 G = nx.Graph()
-n=3
+n=int(sys.argv[1])
 perms = itertools.permutations(list(range(1,n+1)))
 nodes = []
 
@@ -17,6 +18,9 @@ def dist(n1, n2):
         if n1[i:] == n2[:n-i]:
             return i
     raise Exception("shouldn't happen")
+
+def mindist(n1,n2):
+    return min(dist(n1,n2), dist(n2,n1))
 
 def name(n1):
     return functools.reduce(lambda nm, i: nm+str(i), n1, '')
@@ -39,19 +43,21 @@ def color_map(w):
 for perm in perms:
     for node in nodes:
         d1,d2 = dist(perm, node), dist(node, perm)
-        G.add_edge(perm, node, dist=d1, weight=1.0/min(d1,d2))
-        G.add_edge(node, perm, dist=d2, weight=1.0/min(d1,d2))
+        md2 = min(d1,d2)*min(d1,d2)
+        G.add_edge(perm, node, dist=d1, weight=1.0/md2)
+        G.add_edge(node, perm, dist=d2, weight=1.0/md2)
     nodes.append(perm)
 
-pos = nx.spring_layout(G, iterations=1000)
-nx.draw_networkx_nodes(G, pos, node_size=1000)
+# Need to get list of edges in a complete graph traversal.
+edges_to_draw = filter(lambda e: mindist(e[0],e[1]) <= 2, G.edges()))
+
+pos = nx.spring_layout(G, iterations=10000)
+nx.draw_networkx_nodes(G, pos, node_size=800)
 nx.draw_networkx_labels(G, pos, labels={ni: name(ni) for ni in G.nodes()})
 
-all_edges = G.edges()
 nx.draw_networkx_edges(
         G,
         pos,
-        edgelist=all_edges,
-        edge_color=list(map(lambda e: color_map(min(dist(e[0],e[1]),
-            dist(e[1],e[0]))), all_edges)))
+        edgelist=edges_to_draw,
+        edge_color=list(map(lambda e: color_map(mindist(e[0],e[1])), edges_to_draw)))
 plt.show()
