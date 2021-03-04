@@ -66,16 +66,19 @@ for i in trange(nperms):
             break
         isubset += 1
 
-print("add graph nodes")
-for i in trange(nperms):
-    perm = perms[i]
-    G.add_node(perm, subset=subsetdict[perm])
-
 print("finding a path through the permutations")
 seen_perms = set()
 curr_perm = perms[0]
-seen_perms.add(curr_perm)
-superperm = name(curr_perm)
+subset_ys = [n] * len(subsets)
+superperm = ''
+def add_node(G, perm):
+    global superperm
+    subset = subsetdict[curr_perm]
+    G.add_node(perm, pos=(subset, subset_ys[subset]))
+    subset_ys[subset] -= 1
+    seen_perms.add(perm)
+    superperm += name(perm)
+add_node(G, curr_perm)
 for _ in trange(nperms-1):
     min_d = n+1
     min_perm = None
@@ -93,11 +96,10 @@ for _ in trange(nperms-1):
     d1 = dist(curr_perm, min_perm)
     G.add_edge(curr_perm, min_perm, rad=(d1-1)/5, dist=d1)
     curr_perm = min_perm
-    seen_perms.add(curr_perm)
-    superperm += name(curr_perm)[n-min_d:]
+    add_node(G, curr_perm)
 
 print("making layout")
-pos = nx.multipartite_layout(G)
+pos = nx.get_node_attributes(G, 'pos')
 print("draw network nodes")
 nx.draw_networkx_nodes(
         G,
