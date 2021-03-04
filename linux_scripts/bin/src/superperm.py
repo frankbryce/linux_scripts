@@ -70,10 +70,10 @@ print("finding a path through the permutations")
 seen_perms = set()
 curr_perm = perms[0]
 subset_ys = [n] * len(subsets)
+subset = 0
 superperm = ''
 def add_node(G, perm, chars2add):
     global superperm
-    subset = subsetdict[curr_perm]
     G.add_node(perm, pos=(subset, subset_ys[subset]))
     subset_ys[subset] -= 1
     seen_perms.add(perm)
@@ -94,8 +94,11 @@ for _ in trange(nperms-1):
     if min_perm is None:
         raise Exception(f"no edges found in graph for {curr_perm}")
     d1 = dist(curr_perm, min_perm)
-    G.add_edge(curr_perm, min_perm, rad=(d1-1)/5, dist=d1)
+    # G.add_edge(curr_perm, min_perm, rad=(d1-1)/5, dist=d1)
+    G.add_edge(curr_perm, min_perm, rad=0.0, dist=d1)
     curr_perm = min_perm
+    if min_d != 1:
+        subset += 1
     add_node(G, curr_perm, min_d)
 
 print("making layout")
