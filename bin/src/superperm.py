@@ -71,14 +71,14 @@ seen_perms = set()
 curr_perm = perms[0]
 subset_ys = [n] * len(subsets)
 superperm = ''
-def add_node(G, perm):
+def add_node(G, perm, chars2add):
     global superperm
     subset = subsetdict[curr_perm]
     G.add_node(perm, pos=(subset, subset_ys[subset]))
     subset_ys[subset] -= 1
     seen_perms.add(perm)
-    superperm += name(perm)
-add_node(G, curr_perm)
+    superperm += name(perm)[n-chars2add:]
+add_node(G, curr_perm, n)
 for _ in trange(nperms-1):
     min_d = n+1
     min_perm = None
@@ -96,7 +96,7 @@ for _ in trange(nperms-1):
     d1 = dist(curr_perm, min_perm)
     G.add_edge(curr_perm, min_perm, rad=(d1-1)/5, dist=d1)
     curr_perm = min_perm
-    add_node(G, curr_perm)
+    add_node(G, curr_perm, min_d)
 
 print("making layout")
 pos = nx.get_node_attributes(G, 'pos')
