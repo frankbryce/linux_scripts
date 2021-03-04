@@ -1,13 +1,15 @@
 #!/usr/bin/python
 import matplotlib.pyplot as plt
+import math
 import networkx as nx
 import itertools
 import functools
 import sys
+from tqdm import trange
 
-G = nx.Graph()
+G = nx.DiGraph()
 n=int(sys.argv[1])
-perms = itertools.permutations(list(range(1,n+1)))
+perms = list(itertools.permutations(list(range(1,n+1))))
 nodes = []
 
 def dist(n1, n2):
@@ -40,24 +42,97 @@ def color_map(w):
         return 'y'
     return 'k'
 
+print("build subsets for graph layout")
+nperms = len(perms)
+subsets = [[] for _ in range(int(nperms/n))]
+subsetdict = dict()
+for i in trange(nperms):
+    # find first perm list where dist is 1
+    perm = perms[i]
+    found = False
+    isubset = 0
+    for subset in subsets:
+        if len(subset) == 0:
+            subset.append(perm)
+            subsetdict[perm] = isubset
+            break
+        for sperm in subset:
+            if dist(sperm, perm) + dist(perm, sperm) == n:
+                subset.append(perm)
+                subsetdict[perm] = isubset
+                found = True
+                break
+        if found:
+            break
+        isubset += 1
+
+print("add graph nodes")
+for i in trange(nperms):
+    perm = perms[i]
+    G.add_node(perm, subset=subsetdict[perm])
+
+print("adding edges to graph")
+progress = iter(trange(int(nperms*(nperms-1)/2)))
+next(progress, None)
 for perm in perms:
     for node in nodes:
         d1,d2 = dist(perm, node), dist(node, perm)
-        md2 = min(d1,d2)*min(d1,d2)
-        G.add_edge(perm, node, dist=d1, weight=1.0/md2)
-        G.add_edge(node, perm, dist=d2, weight=1.0/md2)
+        wt = 1.0/min(d1,d2)**3
+        G.add_edge(perm, node, rad=(d1-1)/5, dist=d1, weight=wt)
+        G.add_edge(node, perm, rad=(d2-1)/5, dist=d2, weight=wt)
+        next(progress, None)
     nodes.append(perm)
 
-# Need to get list of edges in a complete graph traversal.
-edges_to_draw = filter(lambda e: mindist(e[0],e[1]) <= 2, G.edges()))
+print("finding a path through the permutations")
+edges_to_draw = []
+seen_perms = set()
+curr_perm = perms[0]
+seen_perms.add(curr_perm)
+superperm = name(curr_perm)
+for _ in trange(nperms-1):
+    curr_edges = G.edges([curr_perm], data=True)
+    min_d = n+1
+    min_e = None
+    min_nd = None
+    for iedge in curr_edges:
+        if iedge[0] != curr_perm:
+            continue
+        if iedge[1] in seen_perms:
+            continue
+        d = iedge[2]["dist"]
+        if d < min_d:
+            min_d = d
+            min_e = iedge
+            min_nd = iedge[1]
+    if min_nd is None or min_e is None:
+        raise Exception(f"no edges found in graph for {curr_perm}")
+    edges_to_draw.append(min_e)
+    curr_perm = min_nd
+    seen_perms.add(curr_perm)
+    superperm += name(curr_perm)[n-min_d:]
 
-pos = nx.spring_layout(G, iterations=10000)
-nx.draw_networkx_nodes(G, pos, node_size=800)
-nx.draw_networkx_labels(G, pos, labels={ni: name(ni) for ni in G.nodes()})
-
-nx.draw_networkx_edges(
+print("making layout")
+pos = nx.multipartite_layout(G)
+print("draw network nodes")
+nx.draw_networkx_nodes(
         G,
         pos,
-        edgelist=edges_to_draw,
-        edge_color=list(map(lambda e: color_map(mindist(e[0],e[1])), edges_to_draw)))
+        node_color=(0.9,0.9,0.9,0.5),
+        node_size=800)
+
+print("draw network edges")
+for i in trange(len(edges_to_draw)):
+    edge = edges_to_draw[i]
+    nx.draw_networkx_edges(
+        G,
+        pos,
+        edgelist=[edge],
+        edge_color=color_map(edge[2]["dist"]),
+        connectionstyle=f'arc3, rad = {edge[2]["rad"]}')
+
+print("draw network labels")
+nx.draw_networkx_labels(
+        G, pos,
+        labels={ni: name(ni) for ni in G.nodes()})
+print(f"Superpermutation of length {len(superperm)} found: {superperm}")
 plt.show()
