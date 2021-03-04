@@ -91,8 +91,7 @@ for _ in trange(nperms-1):
     if min_perm is None:
         raise Exception(f"no edges found in graph for {curr_perm}")
     d1 = dist(curr_perm, min_perm)
-    wt = 1.0/(d1**3)
-    G.add_edge(curr_perm, min_perm, rad=(d1-1)/5, dist=d1, weight=wt)
+    G.add_edge(curr_perm, min_perm, rad=(d1-1)/5, dist=d1)
     curr_perm = min_perm
     seen_perms.add(curr_perm)
     superperm += name(curr_perm)[n-min_d:]
