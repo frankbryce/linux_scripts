@@ -9,7 +9,11 @@ from tqdm import trange
 
 G = nx.DiGraph()
 n=int(sys.argv[1])
-perms = list(itertools.permutations(list(range(1,n+1))))
+if len(sys.argv) > 2:
+    filter_len=int(sys.argv[2])
+else:
+    filter_len = 0
+perms = set(itertools.permutations(list(range(1,n+1))))
 nodes = []
 
 def dist(n1, n2):
@@ -42,34 +46,11 @@ def color_map(w):
         return 'y'
     return 'k'
 
-print("build subsets for graph layout")
-nperms = len(perms)
-subsets = [[] for _ in range(int(nperms/n))]
-subsetdict = dict()
-for i in trange(nperms):
-    # find first perm list where dist is 1
-    perm = perms[i]
-    found = False
-    isubset = 0
-    for subset in subsets:
-        if len(subset) == 0:
-            subset.append(perm)
-            subsetdict[perm] = isubset
-            break
-        for sperm in subset:
-            if dist(sperm, perm) + dist(perm, sperm) == n:
-                subset.append(perm)
-                subsetdict[perm] = isubset
-                found = True
-                break
-        if found:
-            break
-        isubset += 1
-
 print("finding a path through the permutations")
+nperms = math.factorial(n)
 seen_perms = set()
-curr_perm = perms[0]
-subset_ys = [n] * len(subsets)
+curr_perm = tuple([i+1 for i in range(n)]) # next(iter(perms))
+subset_ys = [n] * int(nperms/n)
 subset = 0
 superperm = ''
 def add_node(G, perm, chars2add):
@@ -82,11 +63,7 @@ add_node(G, curr_perm, n)
 for _ in trange(nperms-1):
     min_d = n+1
     min_perm = None
-    for perm in perms:
-        if perm == curr_perm:
-            continue
-        if perm in seen_perms:
-            continue
+    for perm in sorted(perms.difference(seen_perms)):
         d = dist(curr_perm, perm)
         if d < min_d:
             min_d = d
@@ -103,15 +80,16 @@ for _ in trange(nperms-1):
 
 print("making layout")
 pos = nx.get_node_attributes(G, 'pos')
+
 print("draw network nodes")
 nx.draw_networkx_nodes(
         G,
         pos,
-        node_color=(0.9,0.9,0.9,0.5),
-        node_size=800)
+        node_color=[(0.9,0.9,0.9,0.5)],
+        node_size=0)
 
 print("draw network edges")
-edges_to_draw = list(G.edges.data())
+edges_to_draw = list(filter(lambda e: e[2]['dist'] > filter_len, G.edges.data()))
 for i in trange(len(edges_to_draw)):
     edge = edges_to_draw[i]
     nx.draw_networkx_edges(
@@ -121,9 +99,10 @@ for i in trange(len(edges_to_draw)):
         edge_color=color_map(edge[2]["dist"]),
         connectionstyle=f'arc3, rad = {edge[2]["rad"]}')
 
-print("draw network labels")
-nx.draw_networkx_labels(
-        G, pos,
-        labels={ni: name(ni) for ni in G.nodes()})
+# print("draw network labels")
+# nx.draw_networkx_labels(
+#         G, pos,
+#         labels={ni: name(ni) for ni in G.nodes()})
+
 print(f"Superpermutation of length {len(superperm)} found: {superperm}")
 plt.show()
