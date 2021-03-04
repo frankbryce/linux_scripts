@@ -71,43 +71,29 @@ for i in trange(nperms):
     perm = perms[i]
     G.add_node(perm, subset=subsetdict[perm])
 
-print("adding edges to graph")
-progress = iter(trange(int(nperms*(nperms-1)/2)))
-next(progress, None)
-for perm in perms:
-    for node in nodes:
-        d1,d2 = dist(perm, node), dist(node, perm)
-        wt = 1.0/min(d1,d2)**3
-        G.add_edge(perm, node, rad=(d1-1)/5, dist=d1, weight=wt)
-        G.add_edge(node, perm, rad=(d2-1)/5, dist=d2, weight=wt)
-        next(progress, None)
-    nodes.append(perm)
-
 print("finding a path through the permutations")
-edges_to_draw = []
 seen_perms = set()
 curr_perm = perms[0]
 seen_perms.add(curr_perm)
 superperm = name(curr_perm)
 for _ in trange(nperms-1):
-    curr_edges = G.edges([curr_perm], data=True)
     min_d = n+1
-    min_e = None
-    min_nd = None
-    for iedge in curr_edges:
-        if iedge[0] != curr_perm:
+    min_perm = None
+    for perm in perms:
+        if perm == curr_perm:
             continue
-        if iedge[1] in seen_perms:
+        if perm in seen_perms:
             continue
-        d = iedge[2]["dist"]
+        d = dist(curr_perm, perm)
         if d < min_d:
             min_d = d
-            min_e = iedge
-            min_nd = iedge[1]
-    if min_nd is None or min_e is None:
+            min_perm = perm
+    if min_perm is None:
         raise Exception(f"no edges found in graph for {curr_perm}")
-    edges_to_draw.append(min_e)
-    curr_perm = min_nd
+    d1 = dist(curr_perm, min_perm)
+    wt = 1.0/(d1**3)
+    G.add_edge(curr_perm, min_perm, rad=(d1-1)/5, dist=d1, weight=wt)
+    curr_perm = min_perm
     seen_perms.add(curr_perm)
     superperm += name(curr_perm)[n-min_d:]
 
@@ -121,6 +107,7 @@ nx.draw_networkx_nodes(
         node_size=800)
 
 print("draw network edges")
+edges_to_draw = list(G.edges.data())
 for i in trange(len(edges_to_draw)):
     edge = edges_to_draw[i]
     nx.draw_networkx_edges(
