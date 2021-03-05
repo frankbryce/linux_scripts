@@ -8,11 +8,12 @@ import sys
 from tqdm import trange
 
 G = nx.DiGraph()
-n=int(sys.argv[1])
+n = 4
+if len(sys.argv) > 1:
+    n=int(sys.argv[1])
+filter_len = 0
 if len(sys.argv) > 2:
     filter_len=int(sys.argv[2])
-else:
-    filter_len = 0
 perms = set(itertools.permutations(list(range(1,n+1))))
 nodes = []
 
@@ -99,10 +100,11 @@ for i in trange(len(edges_to_draw)):
         edge_color=color_map(edge[2]["dist"]),
         connectionstyle=f'arc3, rad = {edge[2]["rad"]}')
 
-# print("draw network labels")
-# nx.draw_networkx_labels(
-#         G, pos,
-#         labels={ni: name(ni) for ni in G.nodes()})
+if len(sys.argv) < 3 or sys.argv[3].tolower() == "true":
+    print("draw network labels")
+    nx.draw_networkx_labels(
+            G, pos,
+            labels={ni: name(ni) for ni in G.nodes()})
 
 print(f"Superpermutation of length {len(superperm)} found: {superperm}")
 plt.show()
