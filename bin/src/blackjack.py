@@ -175,8 +175,9 @@ class Policy:
             # REWARD 3d surface plot
             ax = axes[0][numaces]
             ax.clear()
+            ax.set_title('Value Function')
             ax.set_xlabel('player sum')
-            ax.set_ylabel('dealer sum')
+            ax.set_ylabel('dealer card')
             ax.set_zlabel(f'E[Reward] {numaces} aces')
             expected_rewards = np.zeros([10,18])
             for state in self.actionValues:
@@ -188,15 +189,17 @@ class Policy:
             # Optimal Action 2d plot
             ax = axes[1][numaces]
             ax.clear()
+            ax.set_title('Hit (Green) or Stick (Red)')
             ax.set_xlabel('player sum')
-            ax.set_ylabel('dealer sum')
+            ax.set_ylabel('dealer card')
             optimal_actions = np.zeros([10,18])
             for state in self.actionValues:
                 # state: (usable_aces, player_sum, dealer_sum)
                 if state[0] == numaces:
                     optimal_actions[state[2]-2][state[1]-4] = self.GreedyAction(state).value
             cmap = mpl.colors.ListedColormap(['green','red'])
-            ax.imshow(optimal_actions, cmap = cmap)
+            ax.imshow(optimal_actions, cmap = cmap, extent=[4,21,11,2])
+
 
         # https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
         plt.pause(0.001)
