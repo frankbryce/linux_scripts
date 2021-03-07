@@ -3,14 +3,13 @@ import csv
 from enum import Enum
 from mpl_toolkits import mplot3d
 import matplotlib as mpl
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 import sys
 from tqdm import trange
 random.seed()
-
-### Game Objects ###
 
 class Card(Enum):
     ACE = 1
@@ -133,12 +132,18 @@ class Policy:
         return max_action, max_value
 
     def GreedyAction(self, state):
+        # Hard code this to not waste time on stupid decisions.
+        if state[1] < 12:
+            return Game.Action.HIT
         return self.bestActionValue(state)[0]
 
     def Value(self, state):
         return self.bestActionValue(state)[1]
 
     def StateActionReward(self, state, action, reward):
+        # These are hard coded above
+        if state[1] < 12:
+            return
         if state in self.actionValues:
             curr = self.actionValues[state][action.value]
             self.actionValues[state][action.value] = (curr[0]+reward, curr[1]+1)
@@ -168,38 +173,41 @@ class Policy:
         return fig, axes
 
     def UpdateGraph(self, fig, axes):  # pass in what was returned from GenerateGraph()
-        player_sums = np.arange(4, 22, 1)
+        player_sums = np.arange(12, 22, 1)
         dealer_sums = np.arange(2, 12, 1)
         player_sums, dealer_sums = np.meshgrid(player_sums, dealer_sums)
         for numaces in [0,1]:
             # REWARD 3d surface plot
             ax = axes[0][numaces]
             ax.clear()
-            ax.set_title('Value Function')
+            ax.set_title(f'Value Function - {numaces} Ace(s)')
             ax.set_xlabel('player sum')
             ax.set_ylabel('dealer card')
-            ax.set_zlabel(f'E[Reward] {numaces} aces')
-            expected_rewards = np.zeros([10,18])
+            ax.set_zlabel(f'E[Reward] {numaces} ace(s)')
+            expected_rewards = np.zeros([10,10])
             for state in self.actionValues:
                 # state: (usable_aces, player_sum, dealer_sum)
                 if state[0] == numaces:
-                    expected_rewards[state[2]-2][state[1]-4] = self.Value(state)
-            ax.plot_surface(player_sums, dealer_sums, expected_rewards)
+                    expected_rewards[state[2]-2][state[1]-12] = self.Value(state)
+            rel_value = (expected_rewards+1)/2
+            ax.plot_surface(player_sums, dealer_sums, expected_rewards,
+                    facecolors=cm.jet(rel_value))
 
             # Optimal Action 2d plot
             ax = axes[1][numaces]
             ax.clear()
-            ax.set_title('Hit (Green) or Stick (Red)')
+            ax.set_title(f'Hit (Green) or Stick (Red) - {numaces} Ace(s)')
             ax.set_xlabel('player sum')
+            ax.set_xticks(np.arange(12,22,1))
             ax.set_ylabel('dealer card')
-            optimal_actions = np.zeros([10,18])
+            ax.set_yticks(np.arange(2,12,1))
+            optimal_actions = np.zeros([10,10])
             for state in self.actionValues:
                 # state: (usable_aces, player_sum, dealer_sum)
                 if state[0] == numaces:
-                    optimal_actions[state[2]-2][state[1]-4] = self.GreedyAction(state).value
+                    optimal_actions[state[2]-2][state[1]-12] = self.GreedyAction(state).value
             cmap = mpl.colors.ListedColormap(['green','red'])
-            ax.imshow(optimal_actions, cmap = cmap, extent=[4,21,11,2])
-
+            ax.imshow(optimal_actions, cmap = cmap, extent=[11.5,21.5,11.5,1.5])
 
         # https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
         plt.pause(0.001)
