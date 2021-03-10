@@ -76,10 +76,11 @@ class Deck:
         for card in Card.All():
             self.cards = np.append(self.cards, [card] * 4)
 
-    # Take n cards from the top of this deck.
+    # Take half the deck, then return it as a Deck object.
     # If there are fewer than n cards in the deck, it takes all of them.
-    def Take(self, n):
-        ret, self.cards = Deck(self.cards[:n]), self.cards[n:]
+    def Split(self):
+        n = len(self.cards)
+        ret, self.cards = Deck(self.cards[:int(n/2)]), self.cards[int(n/2):]
         return ret
 
     # Returns itself to be used in a fluent style.
@@ -155,7 +156,7 @@ class Game:
     def __init__(self, policy1=Policy.RANDOM, policy2=Policy.RANDOM,
             epsilon1=0.01, epsilon2=0.01):
         d1 = Deck().Shuffle()
-        d2 = d1.Take(26)
+        d2 = d1.Split()
         self.p1 = Player(d1, policy1, epsilon1)
         self.p2 = Player(d2, policy2, epsilon2)
         self.rounds = 0
