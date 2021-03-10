@@ -90,7 +90,6 @@ class Deck:
         print(cardDict)
 
 
-
 d1 = Deck().Shuffle()
 d2 = d1.Take(26)
 
