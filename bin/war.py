@@ -168,8 +168,10 @@ class Game:
             if verbose:
                 print(f"{prefix} Player 1: {c1} Player 2: {c2}")
         if c1 is None:
+            self.p2.PutCardsOnBottom([c2])
             return self.p2
         if c2 is None:
+            self.p1.PutCardsOnBottom([c1])
             return self.p1
         if c1 > c2:
             _verbose("player 1 wins!")
@@ -182,14 +184,14 @@ class Game:
             c2 = [c2]
             while c1[-1].value == c2[-1].value:
                 new1 = self.p1.Deck().TakeCards(4)
+                new2 = self.p2.Deck().TakeCards(4)
                 if len(new1) == 0:
                     _verbose("player 2 wins!")
-                    self.p2.PutCardsOnBottom(np.append(c1,c2), verbose)
+                    self.p2.PutCardsOnBottom(np.append(c1,np.append(c2,new2)), verbose)
                     return
-                new2 = self.p2.Deck().TakeCards(4)
                 if len(new2) == 0:
                     _verbose("player 1 wins!")
-                    self.p1.PutCardsOnBottom(np.append(c1,c2), verbose)
+                    self.p1.PutCardsOnBottom(np.append(c1,np.append(c2,new1)), verbose)
                     return
                 c1 = np.append(c1, new1)
                 c2 = np.append(c2, new2)
@@ -203,10 +205,6 @@ class Game:
                 raise Exception("This should never happen")
         else:
             raise Exception("This should never happen")
-        if self.p1.Deck().Len() == 0:
-            return self.p2
-        elif self.p2.Deck().Len() == 0:
-            return self.p1
         if verbose:
             self.p1.Deck().Print()
             self.p2.Deck().Print()
@@ -226,9 +224,9 @@ totalRuns = 0
 p1Wins = 0
 p2Wins = 0
 policy1 = Policy.RANDOM
-policy2 = Policy.RANDOM
 if len(sys.argv) > 1:
     policy1 = Policy(int(sys.argv[1]))
+policy2 = Policy.RANDOM
 if len(sys.argv) > 2:
     policy2 = Policy(int(sys.argv[2]))
 nruns = 10000
@@ -244,10 +242,14 @@ for i in trange(nruns):
         winner = game.Battle(verbose)
     if winner == game.Player1():
         p1Wins += 1
+        loser = game.Player2()
     elif winner == game.Player2():
         p2Wins += 1
+        loser = game.Player1()
     else:
         raise Exception("This should never happen")
+    assert winner.Deck().Len() == 52
+    assert loser.Deck().Len() == 0
     totalRuns += 1
     totalRounds += game.Rounds()
 print(f"Rounds per game: {totalRounds/totalRuns}, p1Wins: {p1Wins}, p2Wins: {p2Wins}")
