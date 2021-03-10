@@ -28,6 +28,8 @@
 
 from enum import Enum
 import numpy as np
+import random
+random.seed()
 import sys
 from tqdm import trange
 
@@ -125,12 +127,13 @@ class Policy(Enum):
 
 class Player:
 
-    def __init__(self, deck, policy=Policy.RANDOM):
+    def __init__(self, deck, policy=Policy.RANDOM, epsilon=0.01):
         self.deck = deck
         self.policy = policy
+        self.epsilon = epsilon
 
     def PutCardsOnBottom(self, cards, verbose=False):
-        if self.policy == Policy.RANDOM:
+        if self.policy == Policy.RANDOM or random.random() < self.epsilon:
             np.random.shuffle(cards)
             self.deck.PutCardsOnBottom(cards)
         elif self.policy == Policy.SORT_HIGH_LOW:
@@ -149,11 +152,12 @@ class Player:
 
 class Game:
 
-    def __init__(self, policy1=Policy.RANDOM, policy2=Policy.RANDOM):
+    def __init__(self, policy1=Policy.RANDOM, policy2=Policy.RANDOM,
+            epsilon1=0.01, epsilon2=0.01):
         d1 = Deck().Shuffle()
         d2 = d1.Take(26)
-        self.p1 = Player(d1, policy1)
-        self.p2 = Player(d2, policy2)
+        self.p1 = Player(d1, policy1, epsilon1)
+        self.p2 = Player(d2, policy2, epsilon2)
         self.rounds = 0
 
     # Battle! Returns a player IFF that player wins. Returns None otherwise
