@@ -15,7 +15,7 @@ if [ ! -d ~/linux_scripts ]; then
 fi
 
 for g in "$@"; do echo "rsync -RP ./$g ~/ ~/linux_scripts"; rsync -RP ./$g ~/ ~/linux_scripts; done
-git -C ~/linux_scripts/ add .
+git -C ~/linux_scripts/ add "$@"
 # user is prompted for commit message, then if there are changes it's pushed
 git -C ~/linux_scripts/ commit && git -C ~/linux_scripts push
 
