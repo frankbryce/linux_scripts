@@ -33,6 +33,7 @@ import random
 random.seed()
 import sys
 import threading
+import time
 from tqdm import trange
 
 class Card(Enum):
@@ -112,7 +113,7 @@ class Deck:
         return self.PutCardsOnBottom([card])
 
     # Returns number of cards in the deck
-    def Len(self):
+    def Size(self):
         return len(self.cards)
 
     def Print(self):
@@ -183,6 +184,7 @@ class Game:
         self.p1 = Player(d1, policy1, epsilon1)
         self.p2 = Player(d2, policy2, epsilon2)
         self.rounds = 0
+        self.deck_sizes = [[d1.Size(), d2.Size()]]
 
     # Battle! Returns a player IFF that player wins. Returns None otherwise
     def Battle(self, verbose=False):
@@ -193,9 +195,11 @@ class Game:
                 print(f"{prefix} Player 1: {c1} Player 2: {c2}")
         if c1 is None:
             self.p2.PutCardsOnBottom([c2])
+            self.deck_sizes.append([self.p1.deck.Size(), self.p2.deck.Size()])
             return self.p2
         if c2 is None:
             self.p1.PutCardsOnBottom([c1])
+            self.deck_sizes.append([self.p1.deck.Size(), self.p2.deck.Size()])
             return self.p1
         if c1 > c2:
             _verbose("player 1 wins!")
@@ -212,10 +216,14 @@ class Game:
                 if len(new1) == 0:
                     _verbose("player 2 wins!")
                     self.p2.PutCardsOnBottom(np.append(c1,np.append(c2,new2)), verbose)
+                    self.deck_sizes.append([self.p1.deck.Size(),
+                        self.p2.deck.Size()])
                     return
                 if len(new2) == 0:
                     _verbose("player 1 wins!")
                     self.p1.PutCardsOnBottom(np.append(c1,np.append(c2,new1)), verbose)
+                    self.deck_sizes.append([self.p1.deck.Size(),
+                        self.p2.deck.Size()])
                     return
                 c1 = np.append(c1, new1)
                 c2 = np.append(c2, new2)
@@ -232,13 +240,17 @@ class Game:
         if verbose:
             self.p1.Deck().Print()
             self.p2.Deck().Print()
+        self.deck_sizes.append([self.p1.deck.Size(), self.p2.deck.Size()])
         return None
 
-    def Player1(self):
+    def P1(self):
         return self.p1
 
-    def Player2(self):
+    def P2(self):
         return self.p2
+
+    def DeckSizes(self):
+        return self.deck_sizes
 
     def Rounds(self):
         return self.rounds
@@ -256,46 +268,76 @@ verbose = False
 if len(sys.argv) > 4:
     verbose = True
 
-fig, p1a = plt.subplots()
-plt.sca(p1a)
+fig, ((p1cda, p2cda), (p1rwa, p2rwa)) = plt.subplots(2,2)
+plt.sca(p1cda)
 plt.axis([Card.TWO.value-0.5, Card.ACE.value+0.5, 0, 1])
-player1_card_dist = np.array([0] * 13)
+p1_card_dist = np.array([0] * 13)
+p2_card_dist = np.array([0] * 13)
+p1_rounds_to_win = []
+p2_rounds_to_win = []
+
+totalRounds = 0
+totalRuns = 0
+p1Wins = 0
+p2Wins = 0
 
 def run_game():
-    global player1_card_dist
-    totalRounds = 0
-    totalRuns = 0
-    p1Wins = 0
-    p2Wins = 0
+    global p1_card_dist
+    global p2_card_dist
+    global p1_rounds_to_win
+    global p2_rounds_to_win
+    global totalRounds
+    global totalRuns
+    global p1Wins
+    global p2Wins
     for i in trange(nruns):
         game = Game(policy1,policy2)
         winner = None
         while winner is None:
             winner = game.Battle(verbose)
-        if winner == game.Player1():
+        if winner == game.P1():
             p1Wins += 1
-            loser = game.Player2()
-        elif winner == game.Player2():
+            p1_rounds_to_win.append(game.Rounds())
+            loser = game.P2()
+        elif winner == game.P2():
             p2Wins += 1
-            loser = game.Player1()
+            p2_rounds_to_win.append(game.Rounds())
+            loser = game.P1()
         else:
             raise Exception("This should never happen")
         totalRuns += 1
         totalRounds += game.Rounds()
-        player1_card_dist += game.Player1().CardDist()
-        # if i % 100 == 99:
-        #     p1_udpater.SetCallbackKwargs(card_dist=player1_card_dist)
+        p1_card_dist += game.P1().CardDist()
+        p2_card_dist += game.P2().CardDist()
+        if i % 100 == 99:
+            time.sleep(0.1)
 
 game_thread = threading.Thread(target=run_game)
 game_thread.start()
 
+plt.pause(0.01)
 while game_thread.is_alive():
-    plt.sca(p1a)
+    # p1 card distro
+    plt.sca(p1cda)
     plt.cla()
     plt.bar([card.value for card in Card.All()],
-        height=player1_card_dist/max(1,max(player1_card_dist)), color='b')
-    plt.pause(0.01)
+        height=p1_card_dist/max(1,max(p1_card_dist)), color='b')
 
+    # p2 card distro
+    plt.sca(p2cda)
+    plt.cla()
+    plt.bar([card.value for card in Card.All()],
+        height=p2_card_dist/max(1,max(p2_card_dist)), color='g')
+
+    plt.sca(p1rwa)
+    plt.hist(p1_rounds_to_win, color='b')
+    plt.sca(p2rwa)
+    plt.hist(p2_rounds_to_win, color='g')
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+fig.canvas.draw()
+fig.canvas.flush_events()
 print(f"Rounds per game: {totalRounds/totalRuns}, p1Wins: {p1Wins}, p2Wins: {p2Wins}")
 plt.show()
 
