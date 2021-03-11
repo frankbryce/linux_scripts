@@ -128,8 +128,9 @@ class Policy(Enum):
     RANDOM = 0
     SORT_HIGH_LOW = 1
     SORT_LOW_HIGH = 2
+    SORT_HIGH_LOW_NO_WAR = 3
+    SORT_LOW_HIGH_NO_WAR = 4
 
-# TODO: store how often each card comes up. Plot in a histogram.
 class Player:
 
     def __init__(self, deck, policy=Policy.RANDOM, epsilon=0.01):
@@ -153,13 +154,15 @@ class Player:
         return card
 
     def PutCardsOnBottom(self, cards, verbose=False):
-        if self.policy == Policy.RANDOM or random.random() < self.epsilon:
+        if (self.policy == Policy.RANDOM or random.random() < self.epsilon or 
+           (self.policy == Policy.SORT_HIGH_LOW_NO_WAR and len(cards) > 2) or
+           (self.policy == Policy.SORT_LOW_HIGH_NO_WAR and len(cards) > 2)):
             np.random.shuffle(cards)
             self.deck.PutCardsOnBottom(cards)
-        elif self.policy == Policy.SORT_HIGH_LOW:
+        elif self.policy == Policy.SORT_HIGH_LOW or self.policy == Policy.SORT_HIGH_LOW_NO_WAR:
             cards.sort()
             self.deck.PutCardOnBottom(cards[::-1])
-        elif self.policy == Policy.SORT_LOW_HIGH:
+        elif self.policy == Policy.SORT_LOW_HIGH or self.policy == Policy.SORT_LOW_HIGH_NO_WAR:
             cards.sort()
             self.deck.PutCardsOnBottom(cards)
         else:
@@ -173,8 +176,6 @@ class Player:
     def Deck(self):
         return self.deck
 
-# TODO: store diff in deck sizes over time. Plot timeseries with stddev bars
-# from winner's perspective.
 class Game:
 
     def __init__(self, policy1=Policy.RANDOM, policy2=Policy.RANDOM,
@@ -268,13 +269,15 @@ verbose = False
 if len(sys.argv) > 4:
     verbose = True
 
-fig, ((p1cda, p2cda), (p1rwa, p2rwa)) = plt.subplots(2,2)
+fig, ((p1cda, p2cda), (p1wpa, p2wpa)) = plt.subplots(2,2)
 plt.sca(p1cda)
 plt.axis([Card.TWO.value-0.5, Card.ACE.value+0.5, 0, 1])
 p1_card_dist = np.array([0] * 13)
 p2_card_dist = np.array([0] * 13)
 p1_rounds_to_win = []
 p2_rounds_to_win = []
+p1_win_pct = []
+p2_win_pct = []
 
 totalRounds = 0
 totalRuns = 0
@@ -286,6 +289,8 @@ def run_game():
     global p2_card_dist
     global p1_rounds_to_win
     global p2_rounds_to_win
+    global p1_win_pct
+    global p2_win_pct
     global totalRounds
     global totalRuns
     global p1Wins
@@ -309,6 +314,8 @@ def run_game():
         totalRounds += game.Rounds()
         p1_card_dist += game.P1().CardDist()
         p2_card_dist += game.P2().CardDist()
+        p1_win_pct.append(p1Wins/totalRuns)
+        p2_win_pct.append(p2Wins/totalRuns)
         if i % 100 == 99:
             time.sleep(0.1)
 
@@ -329,10 +336,12 @@ while game_thread.is_alive():
     plt.bar([card.value for card in Card.All()],
         height=p2_card_dist/max(1,max(p2_card_dist)), color='g')
 
-    plt.sca(p1rwa)
-    plt.hist(p1_rounds_to_win, color='b')
-    plt.sca(p2rwa)
-    plt.hist(p2_rounds_to_win, color='g')
+    plt.sca(p1wpa)
+    plt.cla()
+    plt.plot([i for i in range(min(len(p1_win_pct), 100))], p1_win_pct[-100:], color='b')
+    plt.sca(p2wpa)
+    plt.cla()
+    plt.plot([i for i in range(min(len(p2_win_pct), 100))], p2_win_pct[-100:], color='g')
     fig.canvas.draw()
     fig.canvas.flush_events()
 
